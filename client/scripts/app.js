@@ -3,7 +3,7 @@ var app = {
 
   //TODO: The current 'addFriend' function just adds the class 'friend'
   //to all messages sent by the user
-  server: 'http://127.0.0.1:3000/',
+  server: 'http://127.0.0.1:3000/classes',
   username: 'anonymous',
   roomname: 'lobby',
   lastMessageId: 0,
@@ -27,10 +27,10 @@ var app = {
 
     // Fetch previous messages
     app.startSpinner();
-    app.fetch(false);
+    app.fetch();
 
     // Poll for new messages
-    //setInterval(app.fetch, 3000);
+    setInterval(app.fetch, 3000);
   },
 
   send: function(data) {
@@ -64,7 +64,10 @@ var app = {
       success: function(data) {
         // Don't bother if we have nothing to work with
         data = JSON.parse(data);
-        if (!data.results || !data.results.length) { return; }
+        if (!data.results || !data.results.length) { 
+          app.stopSpinner();
+          return; 
+        }
 
         // Get the last message
         var mostRecentMessage = data.results[data.results.length-1];
@@ -219,7 +222,7 @@ var app = {
       text: app.$message.val(),
       roomname: app.roomname || 'lobby'
     };
-
+    console.log('clicked!');
     app.send(message);
 
     // Stop the form from submitting

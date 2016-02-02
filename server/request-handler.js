@@ -15,6 +15,48 @@ var storage = {results: []};
 var idCounter = 0;
 
 var requestHandler = function(request, response) {
+  console.log("Serving request type " + request.method + " for url " + request.url);
+  var parameters = request.url.split('/');
+
+  if (parameters[1] === 'classes' && parameters.length <= 3) {
+    var headers = defaultCorsHeaders;
+    headers['Content-Type'] = "text/plain";
+    
+    if (request.method === 'POST') {
+      post(request, response, headers);
+    } else if (request.method === 'GET') {
+      get(request, response, headers);
+    }
+  } else {
+    var statusCode = 404;
+    response.writeHead(statusCode, headers);
+    response.end();
+  }
+
+};
+
+var post = function(request, response, headers) {
+  var message = '';
+  request.on('data', function(chunk) {
+    message += chunk;
+  });
+  request.on('end', function() {
+    var statusCode = 201;
+    response.writeHead(statusCode, headers);
+    message = JSON.parse(message);
+    message.objectId = idCounter;
+    idCounter++;
+    storage.results.push(message);
+    response.end();
+  });
+};
+
+var get = function(request, response, headers) {
+  var statusCode = 200;
+  response.writeHead(statusCode, headers);
+  response.end(JSON.stringify(storage));
+};
+
   // Request and Response come from node's http module.
   //
   // They include information about both the incoming request, such as
@@ -29,42 +71,6 @@ var requestHandler = function(request, response) {
   // Adding more logging to your server can be an easy way to get passive
   // debugging help, but you should always be careful about leaving stray
   // console.logs in your code.
-  console.log("Serving request type " + request.method + " for url " + request.url);
-  var parameters = request.url.split('/');
-
-  if (parameters[1] === 'classes' && parameters.length <= 3) {
-    if (request.method === 'POST') {
-      var message = '';
-      request.on('data', function(chunk) {
-        message += chunk;
-      });
-      request.on('end', function() {
-        var statusCode = 201;
-        var headers = defaultCorsHeaders;
-        headers['Content-Type'] = "text/plain";
-        response.writeHead(statusCode, headers);
-        message = JSON.parse(message);
-        message.objectId = idCounter;
-        idCounter++;
-        storage.results.push(message);
-        response.end(JSON.stringify(storage));
-      })
-    } else if (request.method === 'GET') {
-      var statusCode = 200;
-      var headers = defaultCorsHeaders;
-      headers['Content-Type'] = "text/plain";
-      response.writeHead(statusCode, headers);
-      response.end(JSON.stringify(storage));
-    }
-  } else {
-    console.log(request.url);
-    var statusCode = 404;
-    var headers = defaultCorsHeaders;
-    headers['Content-Type'] = "text/plain";
-    response.writeHead(statusCode, headers);
-    response.end();
-  }
-
   // The outgoing status.
   
 
@@ -88,7 +94,6 @@ var requestHandler = function(request, response) {
   // Calling .end "flushes" the response's internal buffer, forcing
   // node to actually send all the data over to the client.
   
-};
 
 // These headers will allow Cross-Origin Resource Sharing (CORS).
 // This code allows this server to talk to websites that
