@@ -30,8 +30,9 @@ var requestHandler = function(request, response) {
   // debugging help, but you should always be careful about leaving stray
   // console.logs in your code.
   console.log("Serving request type " + request.method + " for url " + request.url);
+  var parameters = request.url.split('/');
 
-  if (request.url === '/classes/messages') {
+  if (parameters[1] === 'classes' && parameters.length <= 3) {
     if (request.method === 'POST') {
       var message = '';
       request.on('data', function(chunk) {
@@ -105,5 +106,5 @@ var defaultCorsHeaders = {
   "access-control-max-age": 10 // Seconds.
 };
 
-module.exports = requestHandler;
+exports.requestHandler = requestHandler;
 
