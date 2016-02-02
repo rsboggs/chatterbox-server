@@ -12,6 +12,7 @@ this file and include it in basic-server.js so that it actually works.
 
 **************************************************************/
 var storage = {results: []};
+var idCounter = 0;
 
 var requestHandler = function(request, response) {
   // Request and Response come from node's http module.
@@ -29,6 +30,7 @@ var requestHandler = function(request, response) {
   // debugging help, but you should always be careful about leaving stray
   // console.logs in your code.
   console.log("Serving request type " + request.method + " for url " + request.url);
+
   if (request.url === '/classes/messages') {
     if (request.method === 'POST') {
       var message = '';
@@ -40,7 +42,10 @@ var requestHandler = function(request, response) {
         var headers = defaultCorsHeaders;
         headers['Content-Type'] = "text/plain";
         response.writeHead(statusCode, headers);
-        storage.results.push(JSON.parse(message));
+        message = JSON.parse(message);
+        message.objectId = idCounter;
+        idCounter++;
+        storage.results.push(message);
         response.end(JSON.stringify(storage));
       })
     } else if (request.method === 'GET') {
@@ -51,6 +56,7 @@ var requestHandler = function(request, response) {
       response.end(JSON.stringify(storage));
     }
   } else {
+    console.log(request.url);
     var statusCode = 404;
     var headers = defaultCorsHeaders;
     headers['Content-Type'] = "text/plain";
